@@ -10,6 +10,10 @@
 
 この記事では，Haskellライブラリの一つである[syb](https://hackage.haskell.org/package/syb-0.7.2.2)の簡単な紹介と，実際に私がプロジェクトの中で使用した例を紹介します．
 
+## ライセンス
+
+本文は[CC BY 4.0](LICENSE-CC-BY-4.0.md)の下で利用可能です．またソースコードは[WTFPL](LICENSE-WTFPL.md)の下で利用可能です．
+
 ## バージョン情報
 
 | 名前                        | バージョン                    |
