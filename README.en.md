@@ -8,7 +8,7 @@
 [English version is here.](README.en.md)
 -->
 
-[日本語版はこちら．](README.md)
+[日本語版はこちら．](src/Lib.lhs)
 
 <!--
 ### はじめに
