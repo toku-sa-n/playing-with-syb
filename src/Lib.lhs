@@ -1,14 +1,16 @@
+# sybで遊ぶ
+
 [![Deploy](https://github.com/toku-sa-n/playing-with-syb/actions/workflows/ci.yml/badge.svg)](https://github.com/toku-sa-n/playing-with-syb/actions/workflows/ci.yml)
 
 [English version is here.](README.en.md)
 
-### はじめに
+## はじめに
 
 この記事は，[Haskell Advent Calendar 2022](https://qiita.com/advent-calendar/2022/haskell)の20日目の記事です．
 
 この記事では，Haskellライブラリの一つである[syb](https://hackage.haskell.org/package/syb-0.7.2.2)の簡単な紹介と，実際に私がプロジェクトの中で使用した例を紹介します．
 
-### バージョン情報
+## バージョン情報
 
 | 名前                        | バージョン                    |
 |-----------------------------|-------------------------------|
@@ -16,15 +18,15 @@
 | Stack resolver              | LTS 20.4                      |
 | GHCやライブラリのバージョン | LTSで指定されているものを使用 |
 
-### `syb`とは
+## `syb`とは
 
 `syb`とはScrap Your Boilerplateの略です．[`Data`](https://hackage.haskell.org/package/base-4.16.4.0/docs/Data-Data.html#t:Data)型クラスや[`Typeable`](https://hackage.haskell.org/package/base-4.16.4.0/docs/Data-Typeable.html#t:Typeable)を利用して，データ構造に含まれている特定の型の値だけに対して操作を行ったり，特定の型の値だけを抽出するなどといったことが可能になります．
 
 [Haskell Wiki](https://wiki.haskell.org/Research_papers/Generics)にいくつか論文が紹介されていますが，特に[Scrap Your Boilerplate: A Practical Design Pattern for Generic Programming](https://www.microsoft.com/en-us/research/wp-content/uploads/2003/01/hmap.pdf)は読みやすいのでおすすめです．
 
-### コード例
+## コード例
 
-以下の説明では，次のような，様々な世界に住む住民や集団の情報を一つのデータ構造に含めたものを用います．
+以下の説明では，以下の，様々な世界に住む住民や集団の情報を一つのデータ構造に含めたものを用います．
 
 ```haskell
 {-# LANGUAGE DeriveDataTypeable  #-}
@@ -146,11 +148,11 @@ worlds =
     ]
 ```
 
-### 下準備：`Data`型クラスの実装
+## 下準備：`Data`型クラスの実装
 
 `syb`を利用するためには，型が`Data`型クラスを実装している必要があります．`Data`型クラスの詳細についてはドキュメントを確認してください．
 
-何はともあれまずは実装方法ですが，GHCの拡張機能である`DeriveDataTypeable`を有効にして，`deriving (Data)`で完了です．もちろん手動で定義することも可能ですが，deriveしたほうが楽です．
+何はともあれまずは実装方法ですが，GHCの拡張機能である`DeriveDataTypeable`を有効にして，`deriving (Data)`で完了です．もちろん手動で実装することも可能ですが，deriveしたほうが楽です．
 
 以下の説明は，型に対し`Data`型クラスが適切に実装されていることを前提としています．
 

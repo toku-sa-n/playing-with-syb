@@ -1,4 +1,10 @@
 <!--
+# sybで遊ぶ
+-->
+
+# Playing with syb
+
+<!--
 [![Deploy](https://github.com/toku-sa-n/playing-with-syb/actions/workflows/ci.yml/badge.svg)](https://github.com/toku-sa-n/playing-with-syb/actions/workflows/ci.yml)
 -->
 
@@ -11,10 +17,10 @@
 [日本語版はこちら．](src/Lib.lhs)
 
 <!--
-### はじめに
+## はじめに
 -->
 
-### Introduction
+## Introduction
 
 <!--
 この記事は，[Haskell Advent Calendar 2022](https://qiita.com/advent-calendar/2022/haskell)の20日目の記事です．
@@ -29,10 +35,10 @@ This is the 20th article of [Haskell Advent Calendar 2022](https://qiita.com/adv
 This article briefly introduces [syb](https://hackage.haskell.org/package/syb-0.7.2.2) which is one of Haskell libraries, and an example where I used it in a project.
 
 <!--
-### バージョン情報
+## バージョン情報
 -->
 
-### Versions
+## Versions
 
 <!--
 | 名前                        | バージョン                    |
@@ -49,10 +55,10 @@ This article briefly introduces [syb](https://hackage.haskell.org/package/syb-0.
 | Versions of GHC and libraries | Ones specified by LTS |
 
 <!--
-### `syb`とは
+## `syb`とは
 -->
 
-### What is `syb`?
+## What is `syb`?
 
 <!--
 `syb`とはScrap Your Boilerplateの略です．[`Data`](https://hackage.haskell.org/package/base-4.16.4.0/docs/Data-Data.html#t:Data)型クラスや[`Typeable`](https://hackage.haskell.org/package/base-4.16.4.0/docs/Data-Typeable.html#t:Typeable)を利用して，データ構造に含まれている特定の型の値だけに対して操作を行ったり，特定の型の値だけを抽出するなどといったことが可能になります．
@@ -67,32 +73,35 @@ This article briefly introduces [syb](https://hackage.haskell.org/package/syb-0.
 [Haskell Wiki](https://wiki.haskell.org/Research_papers/Generics) lists papers related to syb. I recommend to read [Scrap Your Boilerplate: A Practical Design Pattern for Generic Programming](https://www.microsoft.com/en-us/research/wp-content/uploads/2003/01/hmap.pdf) because it is easy to read.
 
 <!--
-### 使用例
+## コード例
 -->
 
-### Usage
+## Code example
 
 <!--
-#### 特定の型の値だけを抽出する
+以下の説明では，以下の，様々な世界に住む住民や集団の情報を一つのデータ構造に含めたものを用います．
 -->
 
-#### Extract only values of a specific type
-
-<!--
-例えば以下のような，様々な世界に住む住民の情報を一つのデータ構造に含めたとします．
--->
-
-Suppose you included information of residents living in various worlds in a data structure.
+Below explanation uses the following code which includes a data structure of residents and groups in various worlds.
 
 <!--
 ```haskell
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable  #-}
+{-# LANGUAGE PatternSynonyms     #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeFamilies        #-}
 
 module Lib
-    ( testMembersFromWorld
+    ( gfoldlMember
+    , testMembersFromWorld
     , testMembersFromWorldWithListify
     , testListMossalcadiaMania
     , testSummonAllGroupsInKumamotoCastle
+    , testAppendWorldForData
+    , testAllNothing
     ) where
 
 import           Data.Data             (Data)
@@ -100,6 +109,8 @@ import           Data.Generics.Aliases (mkT)
 import           Data.Generics.Schemes (everywhere, listify)
 import           Data.List             (nub)
 import           Test.Hspec            (Spec, describe, it, shouldBe)
+import           Type.Reflection       (eqTypeRep, pattern App, typeRep,
+                                        (:~~:) (HRefl))
 
 data World =
     World
@@ -196,7 +207,13 @@ worlds =
 -->
 
 ```haskell
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable  #-}
+{-# LANGUAGE PatternSynonyms     #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeFamilies        #-}
 
 module Lib
     ( gfoldlMember
@@ -204,6 +221,8 @@ module Lib
     , testMembersFromWorldWithListify
     , testListMossalcadiaMania
     , testSummonAllGroupsInKumamotoCastle
+    , testAppendWorldForData
+    , testAllNothing
     ) where
 
 import           Data.Data             (Data)
@@ -211,6 +230,8 @@ import           Data.Generics.Aliases (mkT)
 import           Data.Generics.Schemes (everywhere, listify)
 import           Data.List             (nub)
 import           Test.Hspec            (Spec, describe, it, shouldBe)
+import           Type.Reflection       (eqTypeRep, pattern App, typeRep,
+                                        (:~~:) (HRefl))
 
 data World =
     World
@@ -304,6 +325,42 @@ worlds =
           }
     ]
 ```
+
+<!--
+## 下準備：`Data`型クラスの実装
+-->
+
+## Preparation: Implementing `Data` typeclass
+
+<!--
+`syb`を利用するためには，型が`Data`型クラスを実装している必要があります．`Data`型クラスの詳細についてはドキュメントを確認してください．
+-->
+
+A type must implement `Data` typeclass to use `syb`. See the documentation of the typeclass for the detail.
+
+<!--
+何はともあれまずは実装方法ですが，GHCの拡張機能である`DeriveDataTypeable`を有効にして，`deriving (Data)`で完了です．もちろん手動で実装することも可能ですが，deriveしたほうが楽です．
+-->
+
+A type can implement it just by enabling `DeriveDataTypeable` which is one of the GHC's language extensions and writing `deriving (Data)`. Of course, you can implement it by hands, but deriving is much easier.
+
+<!--
+以下の説明は，型に対し`Data`型クラスが適切に実装されていることを前提としています．
+-->
+
+The explanations below assume that types implement `Data` typeclass correctly.
+
+<!--
+#### 特定の型の値だけを抽出する
+-->
+
+#### Extract only values of a specific type
+
+<!--
+例えば以下のような，様々な世界に住む住民の情報を一つのデータ構造に含めたとします．
+-->
+
+Suppose you included information of residents living in various worlds in a data structure.
 
 
 <!--
