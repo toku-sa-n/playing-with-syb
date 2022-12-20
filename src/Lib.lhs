@@ -160,14 +160,18 @@ worlds =
 
 ### 特定の型の値だけを抽出する
 
-例えば以下のような，様々な世界に住む住民の情報を一つのデータ構造に含めたとします．
-
-`World`に含まれている`Member`を全て抽出する関数を単純に書くと，以下の`membersFromWorld`関数のようになります．
+例えば`World`に含まれている`Member`をすべて抽出する関数を書きたいとしましょう．そのような関数を単純に書くと，以下の`membersFromWorld`関数のようになります．
 
 ```haskell
 membersFromWorld :: World -> [Member]
 membersFromWorld = concatMap members . groups
+```
 
+簡単ですね．以下のテストコードで動作を確かめることができます．
+
+（本来テストコードは別の場所に書くべきですが，ここではGHCiなどの出力を載せる代わりにテストコードで実際の挙動を示しています．CIでテストコードを実行しているので，LTSなどのバージョンを上げた際，仮に将来動作が変更されたとしても，それに気付けるようにしています）
+
+```haskell
 allMembersInWorld :: [Member]
 allMembersInWorld =
     [ Member
@@ -211,7 +215,7 @@ allMembersInWorld =
 testMembersFromWorld :: Spec
 testMembersFromWorld =
     describe "membersFromWorld" $
-    it "returns all `Member`s in a `World`" $
+    it "`World`に含まれるすべての`Member`を返す．" $
     concatMap membersFromWorld worlds `shouldBe` allMembersInWorld
 ```
 
@@ -229,7 +233,7 @@ membersFromWorldWithListify = listify onlyMember
 testMembersFromWorldWithListify :: Spec
 testMembersFromWorldWithListify =
     describe "membersFromWorldWithListify" $
-    it "has the same functionality with `testMembersFromWorld`" $
+    it "`membersFromWorld`と同じ機能を持つ" $
     concatMap membersFromWorldWithListify worlds `shouldBe`
     concatMap membersFromWorld worlds
 ```

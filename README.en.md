@@ -363,23 +363,37 @@ The explanations below assume that types implement `Data` typeclass correctly.
 ### Extract only values of a specific type
 
 <!--
-例えば以下のような，様々な世界に住む住民の情報を一つのデータ構造に含めたとします．
+例えば`World`に含まれている`Member`をすべて抽出する関数を書きたいとしましょう．そのような関数を単純に書くと，以下の`membersFromWorld`関数のようになります．
 -->
 
-Suppose you included information of residents living in various worlds in a data structure.
-
-
-<!--
-`World`に含まれている`Member`を全て抽出する関数を単純に書くと，以下の`membersFromWorld`関数のようになります．
--->
-
-Simply writing a function that extracts all `Member`s in a `World` would look like the following `membersFromWorld` function.
+Suppose we want to write a function that extracts all `Member`s in a `World`. Such a function would look like the following `membersFromWorld` function.
 
 <!--
 ```haskell
 membersFromWorld :: World -> [Member]
 membersFromWorld = concatMap members . groups
+```
+-->
 
+```haskell
+membersFromWorld :: World -> [Member]
+membersFromWorld = concatMap members . groups
+```
+
+<!--
+簡単ですね．以下のテストコードで動作を確かめることができます．
+-->
+
+Easy enough. You can verify the behavior with the following test code.
+
+<!--
+（本来テストコードは別の場所に書くべきですが，ここではGHCiなどの出力を載せる代わりにテストコードで実際の挙動を示しています．CIでテストコードを実行しているので，LTSなどのバージョンを上げた際，仮に将来動作が変更されたとしても，それに気付けるようにしています）
+-->
+
+(Normally, we should write test codes elsewhere, but I show functions' actual behaviors by them instead of, e.g., GHCi outputs. I run them in CI, which enables me to be aware of any future changes when I upgrade versions of LTS or something.)
+
+<!--
+```haskell
 allMembersInWorld :: [Member]
 allMembersInWorld =
     [ Member
@@ -423,15 +437,12 @@ allMembersInWorld =
 testMembersFromWorld :: Spec
 testMembersFromWorld =
     describe "membersFromWorld" $
-    it "returns all `Member`s in a `World`" $
+    it "`World`に含まれるすべての`Member`を返す．" $
     concatMap membersFromWorld worlds `shouldBe` allMembersInWorld
 ```
 -->
 
 ```haskell
-membersFromWorld :: World -> [Member]
-membersFromWorld = concatMap members . groups
-
 allMembersInWorld :: [Member]
 allMembersInWorld =
     [ Member
@@ -502,7 +513,7 @@ membersFromWorldWithListify = listify onlyMember
 testMembersFromWorldWithListify :: Spec
 testMembersFromWorldWithListify =
     describe "membersFromWorldWithListify" $
-    it "has the same functionality with `testMembersFromWorld`" $
+    it "`membersFromWorld`と同じ機能を持つ" $
     concatMap membersFromWorldWithListify worlds `shouldBe`
     concatMap membersFromWorld worlds
 ```
@@ -524,10 +535,22 @@ testMembersFromWorldWithListify =
 ```
 
 <!--
-`listify`関数のシグネチャは`Typeable r => (r -> Bool) -> GenericQ [r]`となっています．引数で型`r`の値に対し，抽出する条件を指定します．`const True`で常に`True`を返すことで，型`r`の値を常に抽出するするようにします．なお，`GenericQ`は`forall a. Data a => a -> r`のエイリアスです．また，[ドキュメントに記載されている](https://hackage.haskell.org/package/base-4.16.3.0/docs/Data-Typeable.html)ように，GHC7.10以降，全ての型は自動で`Typeable`をderiveしているため，型変数などを用いていなければ基本的に`listify`を任意の型に対して使用することができると考えて大丈夫です．以下に引用します．
+`listify`関数は，抽出する値の条件を指定する関数を受け取り，「`Data`を実装する任意の型の値を受け取り，その値に含まれている値のうち，条件を満たす値をリストとして返す」関数を返します．
 -->
 
-The signature of the `listify` function is `Typeable r => (r -> Bool) -> GenericQ [r]`. We specify the condition to extract values of type `r`, and passing `const True` which always returns `True` makes the function extract all values of the type. Note that `GenericQ` is an alias of `forall a. Data a => a -> r` and [as written in the document](https://hackage.haskell.org/package/base-4.16.3.0/docs/Data-Typeable.html), all types automatically derive `Typeable` since GHC 7.10, you can assume that you can use `listify` for any values of any types unless the type do not use any type variables. I'll quote the document as follows.
+The `listify` function receives a function that specifies the condition for values to be extracted and returns a function that takes values of any types implementing `Data` and returns a list of values that are included in the passed value and satisfy the condition.
+
+<!--
+`listify`関数のシグネチャは`Typeable r => (r -> Bool) -> GenericQ [r]`となっています．この`r`が，最終的なリストの要素の型となります．すなわちこの関数が返す関数は，受け取った値に含まれている型`r`の値に対し，それが条件を満たすかどうかを確認しています．上記の場合，`const True`で常に`True`を返すことで，型`r`の値を常に抽出するするようにします．
+-->
+
+The signature of the `listify` function is `Typeable r => (r -> Bool) -> GenericQ [r]`. The `r` is the type of the list which is finally returned. In other words, the function that `listify` returns checks if values of type `r` in the passed value satisfy the condition or not. In the above example, We specify the condition function with `const True` which always returns `True`, making the function extract all values of the type.
+
+<!--
+なお，`GenericQ`は`forall a. Data a => a -> r`のエイリアスです．また，[ドキュメントに記載されている](https://hackage.haskell.org/package/base-4.16.3.0/docs/Data-Typeable.html)ように，GHC7.10以降，全ての型は自動で`Typeable`をderiveしているため，型変数などを用いていなければ基本的に`listify`を任意の型に対して使用することができると考えて大丈夫です．以下に引用します．
+-->
+
+Note that `GenericQ` is an alias of `forall a. Data a => a -> r` and [as written in the document](https://hackage.haskell.org/package/base-4.16.3.0/docs/Data-Typeable.html), all types automatically derive `Typeable` since GHC 7.10, you can assume that you can use `listify` for any values of any types unless the type do not use any type variables. I'll quote the document as follows.
 
 <!--
 > Since GHC 7.10, all types automatically have Typeable instances derived. This is in contrast to previous releases where Typeable had to be explicitly derived using the DeriveDataTypeable language extension.
