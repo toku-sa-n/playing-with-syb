@@ -351,10 +351,16 @@ A type can implement it just by enabling `DeriveDataTypeable` which is one of th
 The explanations below assume that types implement `Data` typeclass correctly.
 
 <!--
-#### 特定の型の値だけを抽出する
+## 使用例
 -->
 
-#### Extract only values of a specific type
+## Usage
+
+<!--
+### 特定の型の値だけを抽出する
+-->
+
+### Extract only values of a specific type
 
 <!--
 例えば以下のような，様々な世界に住む住民の情報を一つのデータ構造に含めたとします．
