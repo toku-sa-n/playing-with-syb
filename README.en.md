@@ -35,6 +35,18 @@ This article is the 20th entry of [Haskell Advent Calendar 2022](https://qiita.c
 This article briefly introduces [syb](https://hackage.haskell.org/package/syb-0.7.2.2), one of Haskell's libraries, and an example where I used it in a project.
 
 <!--
+## ライセンス
+-->
+
+## Licenses
+
+<!--
+本文は[CC BY 4.0](LICENSE-CC-BY-4.0.md)の下で利用可能です．またソースコードは[WTFPL](LICENSE-WTFPL.md)の下で利用可能です．
+-->
+
+The texts are licensed under [CC BY 4.0](LICENSE-CC-BY-4.0.md). Also, the source codes are licensed under [WTFPL](LICENSE-WTFPL.md).
+
+<!--
 ## バージョン情報
 -->
 
