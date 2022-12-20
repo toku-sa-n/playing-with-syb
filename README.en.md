@@ -5,6 +5,12 @@
 [![Deploy](https://github.com/toku-sa-n/playing-with-syb/actions/workflows/ci.yml/badge.svg)](https://github.com/toku-sa-n/playing-with-syb/actions/workflows/ci.yml)
 
 <!--
+[English version is here.](README.en.md)
+-->
+
+[日本語版はこちら．](README.md)
+
+<!--
 ### はじめに
 -->
 
