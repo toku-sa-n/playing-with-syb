@@ -575,7 +575,7 @@ listMossalcadiaMania = listify f
 testListMossalcadiaMania :: Spec
 testListMossalcadiaMania =
     describe "listMossalcadiaMania" $
-    it "lists all `Member`s who love Mossalcadia" $
+    it "モスアルカディアが好きな`Member`をリストで返す" $
     concatMap listMossalcadiaMania worlds `shouldBe` expected
   where
     expected =
@@ -599,7 +599,7 @@ listMossalcadiaMania = listify f
 testListMossalcadiaMania :: Spec
 testListMossalcadiaMania =
     describe "listMossalcadiaMania" $
-    it "lists all `Member`s who love Mossalcadia" $
+    it "returns a list of `Member`s who like Mossalcadia" $
     concatMap listMossalcadiaMania worlds `shouldBe` expected
   where
     expected =
@@ -613,10 +613,10 @@ testListMossalcadiaMania =
 ```
 
 <!--
-#### 特定の型の値を変更する
+### 特定の型の値を変更する
 -->
 
-#### Modify values of a specific type
+### Modify values of a specific type
 
 <!--
 妙な話ですが，例えば全ての集団が突然熊本城に召喚されたとしましょう．`Group`の`place`を全て"熊本城"に変更しなければなりません．やはりこれも小規模のデータ構造ならいくつの関数を定義すればどうにかなります．しかし大規模なものになると手に負えません．
@@ -725,3 +725,297 @@ testAppendWorldForData =
 -->
 
 In the above Kumamoto Castle example, we use `everywhere` with the function `f :: Group -> Group` applied with `mkT`. Therefore, it modifies the `place` to "Kumamoto Castle" if the passed value contains a value of `Group`. It does nothing for values of any other types.
+
+<!--
+### 複雑な型に対応する
+-->
+
+### Dealing with complex types
+
+<!--
+どういう理由かは知りませんが，突然全ての`Maybe a`を`Nothing`にしないといけなくなったとしましょう．単純に`mkT`に`f :: Data a => Maybe a -> Maybe a`という型の関数を渡すと失敗します．
+-->
+
+Let's say you need to modify all `Maybe a` values to `Nothing` for some reasons. Simply passing `f :: Data a => Maybe a -> Maybe a` to `mkT` doesn't work.
+
+
+<!--
+```haskell
+-- 以下のような関数は定義できない．
+-- allNothing :: World -> World
+-- allNothing = everywhere (mkT f)
+--   where
+--     f :: Data a => Maybe a -> Maybe a
+--     f = const Nothing
+```
+-->
+
+```haskell
+-- You can't define functions like below.
+-- allNothing :: World -> World
+-- allNothing = everywhere (mkT f)
+--   where
+--     f :: Data a => Maybe a -> Maybe a
+--     f = const Nothing
+```
+
+<!--
+正直なところ，私はこのエラーに対する正しい説明をすることが出来ません．ただし打開策は存在します．[`Type.Reflection`](https://hackage.haskell.org/package/base-4.16.3.0/docs/Type-Reflection.html#t:Typeable)モジュールを利用します．以下のように書くと目的を達成できます．なお，このコードの実行には`TypeApplications`，`ScopedTypeVariables`，`RankNTypes`を有効にする必要があります．
+-->
+
+To be honest, I can't explain about this error correctly, but there is a workaround for this; [`Type.Reflection`](https://hackage.haskell.org/package/base-4.16.3.0/docs/Type-Reflection.html#t:Typeable). The following code achieves the goal. Note that you need to enable `TypeApplications`, `ScopedTypeVariables`, and `RankNTypes`.
+
+<!--
+```haskell
+allNothing :: Data a => a -> a
+allNothing = everywhere f
+  where
+    f :: forall a. Data a => a -> a
+    f x
+        | App g _ <- typeRep @a
+        , Just HRefl <- eqTypeRep g (typeRep @Maybe) = Nothing
+        | otherwise = x
+
+testAllNothing :: Spec
+testAllNothing =
+    describe "allNothing" $
+    it "すべての`Maybe a`を`Nothing`にする" $
+    allNothing allMembersInWorld `shouldBe` expected
+  where
+    expected =
+        [ Member
+              { memberName = "ロミアス"
+              , anotherName = "異形の森の使者"
+              , age = Nothing
+              , favoriteMoss = Nothing
+              }
+        , Member
+              { memberName = "ラーネイレ"
+              , anotherName = "風を聴く者"
+              , age = Nothing
+              , favoriteMoss = Nothing
+              }
+        , Member
+              { memberName = "ウェゼル"
+              , anotherName = "ザナンの白き鷹"
+              , age = Nothing
+              , favoriteMoss = Nothing
+              }
+        , Member
+              { memberName = "ロイター"
+              , anotherName = "ザナンの紅の英雄"
+              , age = Nothing
+              , favoriteMoss = Nothing
+              }
+        , Member
+              { memberName = "デーリッチ"
+              , anotherName = "ハグレ王国国王"
+              , age = Nothing
+              , favoriteMoss = Nothing
+              }
+        , Member
+              { memberName = "ローズマリー"
+              , anotherName = "ビッグモス"
+              , age = Nothing
+              , favoriteMoss = Nothing
+              }
+        ]
+```
+-->
+
+```haskell
+allNothing :: Data a => a -> a
+allNothing = everywhere f
+  where
+    f :: forall a. Data a => a -> a
+    f x
+        | App g _ <- typeRep @a
+        , Just HRefl <- eqTypeRep g (typeRep @Maybe) = Nothing
+        | otherwise = x
+
+testAllNothing :: Spec
+testAllNothing =
+    describe "allNothing" $
+    it "changes all `Maybe a`s to `Nothing`" $
+    allNothing allMembersInWorld `shouldBe` expected
+  where
+    expected =
+        [ Member
+              { memberName = "Romias"
+              , anotherName = "The messenger for Vindale"
+              , age = Nothing
+              , favoriteMoss = Nothing
+              }
+        , Member
+              { memberName = "Larnneire"
+              , anotherName = "The listener of the wind"
+              , age = Nothing
+              , favoriteMoss = Nothing
+              }
+        , Member
+              { memberName = "Vessel"
+              , anotherName = "The crimson of Zanan"
+              , age = Nothing
+              , favoriteMoss = Nothing
+              }
+        , Member
+              { memberName = "Loyter"
+              , anotherName = "The crimson of Zanan"
+              , age = Nothing
+              , favoriteMoss = Nothing
+              }
+        , Member
+              { memberName = "Derich"
+              , anotherName = "The queend of Hagure Queendom"
+              , age = Nothing
+              , favoriteMoss = Nothing
+              }
+        , Member
+              { memberName = "Rosemary"
+              , anotherName = "Big moss"
+              , age = Nothing
+              , favoriteMoss = Nothing
+              }
+        ]
+```
+
+<!--
+`typeRep`を使用することで，型の構成を知ることができます．また，`eqTypeRep`は2つの型が等しいかどうかを確かめます．これが`Just HRefl`を返す場合，その2つの型は等しいとされます．
+-->
+
+You can get the structure of a type with `typeRep`. Also, `eqTypeRep` checks if two types are equal. Two types are same if it returns `Just HRefl`.
+
+<!--
+これらを用いることで，`everywhere`を使用する際に型変数を含む型に対しても操作を行うことができます．
+-->
+
+With these functions, we can use `everywhere` for types with type variables.
+
+<!--
+## 実際のプロジェクトでの使用経験
+-->
+
+## `syb` experience in an actual project
+
+
+<!--
+現在私が行っている[HIndent](https://hackage.haskell.org/package/hindent)の[改修](https://github.com/mihaimaruseac/hindent/pull/593)において，ASTに対する前処理で`syb`の各関数を使用しています．
+-->
+
+I use `syb`s functions in my current [rewriting](https://github.com/mihaimaruseac/hindent/pull/593) of [HIndent](https://hackage.haskell.org/package/hindent).
+
+
+<!--
+HIndentはHaskellのソースコードフォーマッタの一つです．現在の実装では，Haskellのソースコードをパースするために[haskell-src-exts](https://hackage.haskell.org/package/haskell-src-exts)を用いています．しかしながら，このライブラリは長らくメンテナンスされておらず，最近のGHCで導入された拡張機能などに対応することができません．したがってそのような拡張機能を利用しているコードをうまく整形できない問題がありました．
+-->
+
+HIndent is one of the Haskell source code formatters. Its current implementation uses [haskell-src-exts](https://hackage.haskell.org/package/haskell-src-exts) to parse Haskell source codes. However, the library is unmaintained for a long time, and it can't handle GHC extensions introduced recently. Thus, HIndent had a problem of not formatting codes using such extensions correctly.
+
+<!--
+そこで，GHCのAPIを複数のGHCのバージョンで利用できるようにした[ghc-lib-parser](https://hackage.haskell.org/package/ghc-lib-parser)を利用するように，現在ソースコードを改修しています．
+-->
+
+For this reason, I'm rewriting the source code to make HIndent use [ghc-lib-parser](https://hackage.haskell.org/package/ghc-lib-parser) which makes GHC API available for multiple GHC versions.
+
+<!--
+[`ghc-lib-parser`を用いてHaskellのソースコードをパースする](https://hackage.haskell.org/package/ghc-lib-parser-9.2.5.20221107/docs/GHC-Parser.html)と，[`HsModule`](https://hackage.haskell.org/package/ghc-lib-parser-9.2.5.20221107/docs/GHC-Hs.html#t:HsModule)という型の値を得ることができます．これはHaskellのソースコードのASTであり，これをもとにHIndentはコードの整形を行います．ただし，単純に生成されたASTを用いるとコメントの扱いが難しかったり，他にも整形において不便な事柄が存在します．そのため，適切なノードにコメントのノードを再配置するなど，ASTに対する前処理を行う必要があります．
+-->
+
+[Parsing a Haskell source code using `ghc-lib-parser`](https://hackage.haskell.org/package/ghc-lib-parser-9.2.5.20221107/docs/GHC-Parser.html) can generate a value of [`HsModule`](https://hackage.haskell.org/package/ghc-lib-parser-9.2.5.20221107/docs/GHC-Hs.html#t:HsModule). This is the source code's AST, and HIndent formats the code with it. However, simply using the generated AST causes difficultieis in handling comments and other inconveniences in formatting. Therefore, it is necessary to do preprocessing of the AST such as relocating comment nodes to appropriate nodes.
+
+<!--
+`HsModule`は`Data`を実装しているため，`syb`の各関数を用いることができます．コメントノードの再配置の際は，まず[`listify`でコメントノードを回収](https://github.com/toku-sa-n/hindent/blob/afd30663dea44c1dd60d62f27cbe968d90544833/src/HIndent/ModulePreprocessing.hs#L42)します．このとき，コードの終端を表すために存在するEOFコメントノードは省いています．その後，コメントを適切に再配置しています．このとき`State`モナドも利用しているため，`everywhere`ではなく，モナドを扱うことができる[`everywhereM`関数](https://hackage.haskell.org/package/syb-0.7.2.2/docs/Data-Generics-Schemes.html#v:everywhereM)を使用しています（[コード例](https://github.com/toku-sa-n/hindent/blob/afd30663dea44c1dd60d62f27cbe968d90544833/src/HIndent/ModulePreprocessing/CommentRelocation.hs#L119-L128)）．
+-->
+
+We can use `syb` functions because `HsModule` implements `Data`. For the comment nodes relocation, firstly [`listify` collects comment nodes](https://github.com/toku-sa-n/hindent/blob/afd30663dea44c1dd60d62f27cbe968d90544833/src/HIndent/ModulePreprocessing.hs#L42). Here, it excludes the EOF comment node which denotes the end position of the code. Then, comments are relocated in proper positions. Here, I use [`everywhereM`](https://hackage.haskell.org/package/syb-0.7.2.2/docs/Data-Generics-Schemes.html#v:everywhereM) function which can deal with monads instead of `everywhere` because I use `State` monad.
+
+<!--
+## 最後に
+-->
+
+## Conclusion
+
+<!--
+この記事では`syb`に関して簡単に説明しました．実際のところ，`Data`が実装されていて`Functor`が実装されていないという場合はあまりないと思います．だいたい`fmap`で事足ります．それでももしそのような状況に遭遇したら，`syb`のことを思い出してあげてください．
+-->
+
+This article briefly explained about `syb`. As a matter of fact, I don't think you'll face with a situation where a type implements `Data` but doesn't implement `Functor`. In almost all cases, using `fmap` is enough. Still, if you encounter such situations, remember `syb`.
+
+<!--
+## 付録
+-->
+
+## Appendixes
+
+<!--
+### 付録A：なぜこのようなことが可能なのか
+-->
+
+### AppendixA: Why is these things possible?
+
+<!--
+`syb`を初めて利用したときに，なぜ`listify`や`everywhere`などが実装可能なのか非常に気になりました．
+-->
+
+I was curious why functions like `listify` and `everywhere` are implementable when I used `syb` for the first time.
+
+<!--
+その秘密は`Data`型クラスにあります．特に一番重要なメソッドが[`gfoldl`](https://hackage.haskell.org/package/base-4.16.3.0/docs/Data-Data.html#t:Data)です．`Member`型では`deriving (Data)`を用いていますが，おおよそ以下のような実装が生成されます（実際のメソッドの名前は`gfoldl`ですが，ここでは`gfoldlMember`としています）．
+-->
+
+The key is `Data` typeclass. Especially, the most important method is [`gfoldl`](https://hackage.haskell.org/package/base-4.16.3.0/docs/Data-Data.html#t:Data). `Member` type derives `Data` by `deriving (Data)`, and roughly it generates the implementation below (the actual method name is `gfoldl`, but I use `gfoldlMember` here.)
+
+
+<!--
+```haskell
+gfoldlMember ::
+       (forall d b. Data d =>
+                        c (d -> b) -> d -> c b)
+    -> (forall g. g -> c g)
+    -> Member
+    -> c Member
+gfoldlMember k z Member {..} =
+    z Member `k` memberName `k` anotherName `k` age `k` favoriteMoss
+```
+-->
+
+```haskell
+gfoldlMember ::
+       (forall d b. Data d =>
+                        c (d -> b) -> d -> c b)
+    -> (forall g. g -> c g)
+    -> Member
+    -> c Member
+gfoldlMember k z Member {..} =
+    z Member `k` memberName `k` anotherName `k` age `k` favoriteMoss
+```
+
+<!--
+つまり，`Member`の各フィールドの値を畳み込むことが出来ます．
+-->
+
+This means that it can fold each field of `Member`.
+
+<!--
+`syb`で定義されている各関数は直接`gfoldl`関数を用いているのではなく，この関数を用いている`Data`型クラスの他のメソッドを使用しています．
+-->
+
+Each function defined in `syb` uses other methods in `Data` rather than directly using `gfoldl` function.
+
+<!--
+### 付録B：参考文献
+-->
+
+### Appendix B: References
+
+<!--
+- [`listify`の仕組みがわからない](https://tokuchan3515.hatenablog.com/entry/2022/07/15/182044)
+- [How to collect `EpAnn`s from `Located HsModule`?](https://stackoverflow.com/questions/72947117/how-to-collect-epanns-from-located-hsmodule)
+- [Matching higher-kinded types in SYB](https://stackoverflow.com/questions/60054686/matching-higher-kinded-types-in-syb)
+- [Why does GHC complain about the missing `Typeable` instance even if I specify is as a type restriction?](https://stackoverflow.com/questions/73259681/why-does-ghc-complain-about-the-missing-typeable-instance-even-if-i-specify-is)
+-->
+
+- [`listify`の仕組みがわからない](https://tokuchan3515.hatenablog.com/entry/2022/07/15/182044)
+- [How to collect `EpAnn`s from `Located HsModule`?](https://stackoverflow.com/questions/72947117/how-to-collect-epanns-from-located-hsmodule)
+- [Matching higher-kinded types in SYB](https://stackoverflow.com/questions/60054686/matching-higher-kinded-types-in-syb)
+- [Why does GHC complain about the missing `Typeable` instance even if I specify is as a type restriction?](https://stackoverflow.com/questions/73259681/why-does-ghc-complain-about-the-missing-typeable-instance-even-if-i-specify-is)
