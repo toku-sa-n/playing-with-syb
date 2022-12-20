@@ -20,7 +20,8 @@ jobs:
             ~/.cargo/bin
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache
-          key: mdbook-transcheck
+          key: mdbook-transcheck-${{ github.sha }}
+          restore-keys: mdbook-transcheck
 
       # The binary may exist due to the cache, but we ignore it and try to
       # install the latest version anyway with the `--force` flag. Ignoring the
@@ -47,6 +48,8 @@ jobs:
           path: |
             ${{ steps.haskell-setup.outputs.stack-root }}
             .stack-work
+          key: stack-${{ hashFiles('stack.yaml.lock') }}-${{ github.sha }}
+          restore-keys: stack-${{ hashFiles('stack.yaml.lock') }}
 
       - name: Run tests
         run: stack test
