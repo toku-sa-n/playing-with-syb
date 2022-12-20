@@ -1,4 +1,4 @@
-[![Deploy](https://github.com/toku-sa-n/toku-sa-n.github.io/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/toku-sa-n/toku-sa-n.github.io/actions/workflows/deploy.yml)
+[![Deploy](https://github.com/toku-sa-n/playing-with-syb/actions/workflows/ci.yml/badge.svg)](https://github.com/toku-sa-n/playing-with-syb/actions/workflows/ci.yml)
 
 ### はじめに
 
