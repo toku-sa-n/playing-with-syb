@@ -51,5 +51,14 @@ jobs:
           key: stack-${{ hashFiles('stack.yaml.lock') }}-${{ github.sha }}
           restore-keys: stack-${{ hashFiles('stack.yaml.lock') }}
 
+      - name: Update the Cabal index
+        run: cabal update
+
+      - name: Install `markdown-unlit`
+        run: cabal install -z -j -O2 markdown-unlit
+
+      - name: Update PATH
+        run: echo "$HOME/.cabal/bin" >> $GITHUB_PATH
+
       - name: Run tests
         run: stack test
