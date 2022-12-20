@@ -1,3 +1,5 @@
+[![Deploy](https://github.com/toku-sa-n/toku-sa-n.github.io/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/toku-sa-n/toku-sa-n.github.io/actions/workflows/deploy.yml)
+
 ### はじめに
 
 この記事は，[Haskell Advent Calendar 2022](https://qiita.com/advent-calendar/2022/haskell)の20日目の記事です．
