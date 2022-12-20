@@ -1,0 +1,52 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  check_translations:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache
+          key: mdbook-transcheck
+
+      # The binary may exist due to the cache, but we ignore it and try to
+      # install the latest version anyway with the `--force` flag. Ignoring the
+      # return code is not a good way since `cargo install` may fail with other
+      # reasons.
+      - name: Install mdbook-transcheck
+        run: cargo install mdbook-transcheck --force
+
+      - name: Check if translations are up-to-date.
+        run: mdbook-transcheck -1 README.md README.en.md
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: haskell/actions/setup@v1
+        id: haskell-setup
+        with:
+          enable-stack: true
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ${{ steps.haskell-setup.outputs.stack-root }}
+            .stack-work
+
+      - name: Run tests
+        run: stack test
