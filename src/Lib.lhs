@@ -287,7 +287,7 @@ summonAllGroupsInKumamotoCastle = everywhere (mkT f)
 testSummonAllGroupsInKumamotoCastle :: Spec
 testSummonAllGroupsInKumamotoCastle =
     describe "summonAllGroupsInKumamotoCastle" $
-    it "sets \"熊本城\" to the `place`s of all `Group`s in a `World`" $
+    it "`World`のすべての`Group`の`place`を\"熊本城\"に設定する" $
     nub (fmap place $ listify f $ fmap summonAllGroupsInKumamotoCastle worlds) `shouldBe`
     ["熊本城"]
   where
@@ -295,7 +295,7 @@ testSummonAllGroupsInKumamotoCastle =
     f = const True
 ```
 
-`everywhere`は値を変更するための関数を受け取り，「`Data`を実装している任意の値を受け取り，それに含まれている全ての値に対して，先に受け取った関数を適用する」関数を返します．`fmap`のようなものです．
+`everywhere`は値を変更するための関数を受け取り，「`Data`を実装している任意の型の値を受け取り，それに含まれている全ての値に対して，先に受け取った関数を適用する」関数を返します．`fmap`のようなものです．
 
 `everywhere`のシグネチャは`(forall a. Data a => a -> a) -> forall a. Data a => a -> a`となっています．`listify`の場合，引数の型は`Typeable r => (r -> Bool)`でしたので，単純に`Member -> Bool`などと，適当な型の値を受け取って`Bool`値を返す関数を渡せばよいのですが，`everywhere`は`Data`を実装する任意の型を受け取って，同じ型の値を返す関数を定義しなければならず，ある特定の型の値に対する操作を行うのは不可能のように見えます．
 

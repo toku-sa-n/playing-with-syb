@@ -619,13 +619,13 @@ testListMossalcadiaMania =
 #### Modify values of a specific type
 
 <!--
-妙な話ですが，例えば全ての集団が突然熊本城に召喚されたとしましょう．`Group`の`place`を全て熊本城に変更しなければなりません．やはりこれも小規模のデータ構造ならいくつの関数を定義すればどうにかなります．しかし大規模なものになると手に負えません．
+妙な話ですが，例えば全ての集団が突然熊本城に召喚されたとしましょう．`Group`の`place`を全て"熊本城"に変更しなければなりません．やはりこれも小規模のデータ構造ならいくつの関数を定義すればどうにかなります．しかし大規模なものになると手に負えません．
 -->
 
-Strangely enough, but suppose all groups are suddenly summoned at Kumamoto Castle. We need to change the `place` all `Group`s to Kumamoto Castle. Again, we can achieve this by definiting a few functions for a small data structure, but it's too much work for a large one.
+Strangely enough, but suppose all groups are suddenly summoned at Kumamoto Castle. We need to change the `place` values in all `Group`s to Kumamoto Castle. Again, we can achieve this by definiting a few functions for a small data structure, but it's too much work for a large one.
 
 <!--
-このような場合，`syb`で定義されている`everywhere`を使うと楽に書けます．
+このような場合，`syb`で定義されている[`everywhere`](https://hackage.haskell.org/package/syb-0.7.2.2/docs/Data-Generics-Schemes.html#v:everywhere)を使うと楽に書けます．
 -->
 
 For this case, we can write it up easily with [`everywhere`](https://hackage.haskell.org/package/syb-0.7.2.2/docs/Data-Generics-Schemes.html#v:everywhere) defined in `syb`.
@@ -641,7 +641,7 @@ summonAllGroupsInKumamotoCastle = everywhere (mkT f)
 testSummonAllGroupsInKumamotoCastle :: Spec
 testSummonAllGroupsInKumamotoCastle =
     describe "summonAllGroupsInKumamotoCastle" $
-    it "sets \"熊本城\" to the `place`s of all `Group`s in a `World`" $
+    it "`World`のすべての`Group`の`place`を\"熊本城\"に設定する" $
     nub (fmap place $ listify f $ fmap summonAllGroupsInKumamotoCastle worlds) `shouldBe`
     ["熊本城"]
   where
@@ -667,6 +667,12 @@ testSummonAllGroupsInKumamotoCastle =
     f :: Group -> Bool
     f = const True
 ```
+
+<!--
+`everywhere`は値を変更するための関数を受け取り，「`Data`を実装している任意の型の値を受け取り，それに含まれている全ての値に対して，先に受け取った関数を適用する」関数を返します．`fmap`のようなものです．
+-->
+
+`everywhere` takes a function that modifies values and returns a function that takes values of any types implementing `Data` and applies the passed function to all of them. It's something like `fmap`.
 
 <!--
 `everywhere`のシグネチャは`(forall a. Data a => a -> a) -> forall a. Data a => a -> a`となっています．`listify`の場合，引数の型は`Typeable r => (r -> Bool)`でしたので，単純に`Member -> Bool`などと，適当な型の値を受け取って`Bool`値を返す関数を渡せばよいのですが，`everywhere`は`Data`を実装する任意の型を受け取って，同じ型の値を返す関数を定義しなければならず，ある特定の型の値に対する操作を行うのは不可能のように見えます．
@@ -713,3 +719,9 @@ testAppendWorldForData =
         it "returns the given value as-is if its type is not `String`" $
             appendWorldForData (3 :: Int) `shouldBe` 3
 ```
+
+<!--
+上記の熊本城の例では，関数`f :: Group -> Group`に`mkT`を適用したものを`everywhere`で使用しています．したがって，もし受け取った値の中に`Group`型の値が含まれているのならば，それの`place`を"熊本城"に変更します．別の型の値に対しては何も変更を加えません．
+-->
+
+In the above Kumamoto Castle example, we use `everywhere` with the function `f :: Group -> Group` applied with `mkT`. Therefore, it modifies the `place` to "Kumamoto Castle" if the passed value contains a value of `Group`. It does nothing for values of any other types.
